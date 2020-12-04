@@ -5,19 +5,29 @@ import java.util.*;
 public class Exam {
 
     private final List<Question> questions;
-    private final HashMap<Question, Integer> answers;
+    private final HashMap<Integer, Integer> answers;
     private List<Question> studentAnswers;
     private Integer grade;
 
     private final ListIterator<Question> itQuestion;
 
-    public Exam(List<Question> questions, HashMap<Question, Integer> answers) {
+    public Exam(List<Question> questions, HashMap<Integer, Integer> answers) {
         this.questions = questions;
         this.answers = answers;
         this.grade = 0;
 
         this.studentAnswers = new ArrayList<>();
         this.itQuestion = questions.listIterator();
+    }
+
+    private Exam(List<Question> questions, HashMap<Integer,
+                 Integer> answers, List<Question> studentAnswers,
+                 Integer grade, ListIterator<Question> itQuestion) {
+        this.questions = questions;
+        this.answers = answers;
+        this.studentAnswers = studentAnswers;
+        this.grade = grade;
+        this.itQuestion = itQuestion;
     }
 
     public Integer getGrade() {
@@ -37,7 +47,6 @@ public class Exam {
     }
 
     public void answer(Question question) {
-        this.studentAnswers.add(question);
         if (correctAnswer(question)) {
             increaseGrade();
         }
@@ -48,7 +57,7 @@ public class Exam {
     }
 
     private boolean correctAnswer(Question question) {
-        return question.getAnswer().equals(this.answers.get(question));
+        return this.answers.get(question.getQuestionNumber()).equals(question.getAnswer());
     }
 
     @Override
@@ -60,5 +69,9 @@ public class Exam {
                 ", grade=" + grade +
                 ", itQuestion=" + itQuestion +
                 '}';
+    }
+
+    public Exam copy() {
+        return new Exam(this.questions, this.answers, this.studentAnswers, this.grade, this.itQuestion);
     }
 }

@@ -11,7 +11,7 @@ import java.util.List;
 public class ExamBuilderCSV {
     public static Exam build(String path) throws IOException {
         List<Question> questions = new ArrayList<>();
-        HashMap<Question, Integer> answers = new HashMap<>();
+        HashMap<Integer, Integer> answers = new HashMap<>();
 
         BufferedReader csvReader = new BufferedReader(new FileReader(path));
         String row;
@@ -22,10 +22,11 @@ public class ExamBuilderCSV {
 
             Integer questionNumber = questions.size() + 1;
             String statement = data[0];
-            List<String> choices = new ArrayList<>(Arrays.asList(data).subList(1, data.length - 2));
+            List<String> choices = new ArrayList<>(Arrays.asList(data).subList(1, data.length - 1));
 
             Question question = new Question(questionNumber, statement, choices);
-            answers.put(question, Integer.parseInt(data[data.length - 1]));
+            System.out.println(questions.size() + 1);
+            answers.put(questionNumber, Integer.parseInt(data[data.length - 1]));
             questions.add(question);
         }
 

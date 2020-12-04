@@ -1,9 +1,5 @@
 package server;
 
-import common.ProfessorServer;
-import common.StudentClient;
-
-import java.io.IOException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -30,10 +26,19 @@ public class Server {
             //server.uploadExam(this.scanner.nextLine());
 
             startRegister();
+            startExam();
         } catch (Exception e) {
             System.err.println("Server exception: " + e.toString()); e.printStackTrace();
         }
         this.scanner.close();
+    }
+
+    private void startExam() throws RemoteException {
+        this.server.startExam();
+        String in;
+        do {
+            in = this.scanner.nextLine();
+        } while (!in.equals("c"));
     }
 
     private void startRegister() {
