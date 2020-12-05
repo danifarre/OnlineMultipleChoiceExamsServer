@@ -25,7 +25,6 @@ public class ExamBuilderCSV {
             List<String> choices = new ArrayList<>(Arrays.asList(data).subList(1, data.length - 1));
 
             Question question = new Question(questionNumber, statement, choices);
-            System.out.println(questions.size() + 1);
             answers.put(questionNumber, Integer.parseInt(data[data.length - 1]));
             questions.add(question);
         }

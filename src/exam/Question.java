@@ -8,7 +8,7 @@ public class Question implements Serializable {
 
     private final Integer questionNumber;
     private final String statement;
-    private List<String> choices;
+    private final List<String> choices;
     private Integer answer;
 
     public Question(Integer questionNumber, String statement, List<String> choices) {
@@ -32,11 +32,16 @@ public class Question implements Serializable {
 
     @Override
     public String toString() {
-        StringBuilder output = new StringBuilder(this.questionNumber +
+
+        StringBuilder output = new StringBuilder("\n" + this.questionNumber +
                 ". " + this.statement + "\n");
         for (int i = 0; i < this.choices.size(); i++) {
-            output.append("    ").append(i + 1).append(") ").append(this.choices.get(i));
+            output.append("    ").append(i + 1).append(") ").append(this.choices.get(i)).append("\n");
         }
         return output.toString();
+    }
+
+    public boolean validQuestion(Integer answer) {
+        return answer < this.choices.size() && answer > 0;
     }
 }
