@@ -1,8 +1,11 @@
 package server;
 
+import common.StudentClient;
+
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.util.List;
 import java.util.Scanner;
 
 public class Server {
@@ -15,6 +18,7 @@ public class Server {
     }
 
     private void run() {
+        String in;
         this.scanner = new Scanner(System.in);
         try {
             Registry registry = startRegistry(null);
@@ -22,33 +26,44 @@ public class Server {
             registry.bind("exam", server);
 
             System.out.println("Please, specify the file name of the exam");
-            server.uploadExam("exam.csv");
+            this.server.uploadExam("exam.csv");
             //server.uploadExam(this.scanner.nextLine());
 
-            startRegister();
-            startExam();
+                System.out.println("The students are registering...");
+                System.out.println("If you want to start the exam, press (s)");
+                do {
+                    in = scanner.nextLine();
+                } while (!in.equals("s"));
+
+                this.server.stopRegister();
+                this.server.startExam();
+
+                synchronized (this.server) {
+                    while (true) {
+                        this.server.wait();
+                        String studentRequest = this.server.getStudentId();
+                        System.out.println(studentRequest);
+                        Thread.sleep(5000);
+                        System.out.println(studentRequest);
+                        if (this.server.studentHasFinished(studentRequest)) {
+                            this.server.students.get(studentRequest).examFinished(this.server.studentExam.get(studentRequest).getGrade(), "You finished the exam");
+                        } else {
+                            this.server.students.get(studentRequest).sendQuestion(this.server.studentExam.get(studentRequest).nextQuestion());
+                        }
+                    }
+                }
+
+                /*
+                do {
+                    in = this.scanner.nextLine();
+                } while (!in.equals("c"));
+
+                 */
+
         } catch (Exception e) {
             System.err.println("Server exception: " + e.toString()); e.printStackTrace();
         }
         this.scanner.close();
-    }
-
-    private void startExam() throws RemoteException {
-        this.server.startExam();
-        String in;
-        do {
-            in = this.scanner.nextLine();
-        } while (!in.equals("c"));
-    }
-
-    private void startRegister() {
-        System.out.println("The students are registering...");
-        System.out.println("If you want to start the exam, press (s)");
-        String in;
-        do {
-            in = scanner.nextLine();
-        } while (!in.equals("s"));
-        this.server.stopRegister();
     }
 
     private Registry startRegistry(Integer port) throws RemoteException {

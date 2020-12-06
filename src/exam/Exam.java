@@ -22,12 +22,12 @@ public class Exam {
 
     private Exam(List<Question> questions, HashMap<Integer,
                  Integer> answers, List<Question> studentAnswers,
-                 Integer grade, ListIterator<Question> itQuestion) {
+                 Integer grade) {
         this.questions = questions;
         this.answers = answers;
         this.studentAnswers = studentAnswers;
         this.grade = grade;
-        this.itQuestion = itQuestion;
+        this.itQuestion = questions.listIterator();
     }
 
     public Integer getGrade() {
@@ -72,6 +72,6 @@ public class Exam {
     }
 
     public Exam copy() {
-        return new Exam(this.questions, this.answers, this.studentAnswers, this.grade, this.itQuestion);
+        return new Exam(this.questions, this.answers, this.studentAnswers, this.grade);
     }
 }

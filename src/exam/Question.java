@@ -42,6 +42,6 @@ public class Question implements Serializable {
     }
 
     public boolean validQuestion(Integer answer) {
-        return answer < this.choices.size() && answer > 0;
+        return answer <= this.choices.size() && answer > 0;
     }
 }

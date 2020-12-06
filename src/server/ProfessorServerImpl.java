@@ -17,10 +17,11 @@ import java.util.Set;
 public class ProfessorServerImpl extends UnicastRemoteObject implements ProfessorServer {
 
     private Exam exam;
-    private HashMap<String, StudentClient> students;
-    private HashMap<String, Exam> studentExam;
+    public HashMap<String, StudentClient> students;
+    public HashMap<String, Exam> studentExam;
     public boolean canRegistry;
     private Integer studentsNumber;
+    private String studentRequest;
 
     public ProfessorServerImpl() throws RemoteException {
         super();
@@ -39,7 +40,7 @@ public class ProfessorServerImpl extends UnicastRemoteObject implements Professo
     }
 
     public void startExam() throws RemoteException {
-        for (Map.Entry<String, StudentClient> studentSet  : this.students.entrySet()) {
+        for (HashMap.Entry<String, StudentClient> studentSet  : this.students.entrySet()) {
             String studentId = studentSet.getKey();
             StudentClient student = studentSet.getValue();
             student.startExam("The exam starts now");
@@ -49,28 +50,40 @@ public class ProfessorServerImpl extends UnicastRemoteObject implements Professo
 
     @Override
     public void registerStudent(StudentClient client, String studentId) throws RemoteException {
-        if (this.canRegistry) {
-            this.students.put(studentId, client);
-            this.studentsNumber += 1;
-            System.out.println("Student " + studentId +
-                    " joined, there are " +
-                    this.studentsNumber +
-                    " students in the room");
-            this.studentExam.put(studentId, this.exam.copy());
-        } else {
-            client.registerExpired("The registration time has expired");
-            System.out.println("Student " + studentId + " tried to join");
+        synchronized (this) {
+            if (this.canRegistry) {
+                this.students.put(studentId, client);
+                this.studentsNumber += 1;
+                System.out.println("Student " + studentId +
+                        " joined, there are " +
+                        this.studentsNumber +
+                        " students in the room");
+                this.studentExam.put(studentId, this.exam.copy());
+            } else {
+                client.registerExpired("The registration time has expired");
+                System.out.println("Student " + studentId + " tried to join");
+            }
         }
     }
 
     @Override
     public void sendAnswer(String studentId, Question question) throws RemoteException {
-        this.studentExam.get(studentId).answer(question);
-        if (this.studentExam.get(studentId).hasNext()) {
-            this.students.get(studentId).sendQuestion(this.studentExam.get(studentId).nextQuestion());
-        } else {
-            this.students.get(studentId).examFinished(this.studentExam.get(studentId).getGrade(),
-                                                      "You finished the exam");
+        synchronized (this) {
+            this.studentExam.get(studentId).answer(question);
+            this.studentRequest = studentId;
+            notify();
+        }
+    }
+
+    public String getStudentId() {
+        synchronized (this) {
+            return this.studentRequest;
+        }
+    }
+
+    public boolean studentHasFinished(String studentId) {
+        synchronized (this) {
+            return !this.studentExam.get(studentId).hasNext();
         }
     }
 }
