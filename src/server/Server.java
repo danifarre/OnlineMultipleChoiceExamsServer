@@ -38,8 +38,8 @@ public class Server {
                 this.server.stopRegister();
                 this.server.startExam();
 
-                synchronized (this.server) {
-                    while (true) {
+                while (true) {
+                    synchronized (this.server) {
                         this.server.wait();
                         String studentRequest = this.server.getStudentId();
                         if (this.server.studentHasFinished(studentRequest)) {
