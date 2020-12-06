@@ -42,9 +42,6 @@ public class Server {
                     while (true) {
                         this.server.wait();
                         String studentRequest = this.server.getStudentId();
-                        System.out.println(studentRequest);
-                        Thread.sleep(5000);
-                        System.out.println(studentRequest);
                         if (this.server.studentHasFinished(studentRequest)) {
                             this.server.students.get(studentRequest).examFinished(this.server.studentExam.get(studentRequest).getGrade(), "You finished the exam");
                         } else {
