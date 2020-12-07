@@ -1,9 +1,11 @@
 package server;
 
-import java.io.BufferedReader;
+import common.StudentClient;
+
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.util.List;
 import java.util.Scanner;
 
 public class Server {
@@ -17,6 +19,7 @@ public class Server {
 
     private void run() {
         String in;
+        String path = "./grades.csv";
         this.scanner = new Scanner(System.in);
         try {
             Registry registry = startRegistry(null);
@@ -36,30 +39,24 @@ public class Server {
             this.server.stopRegister();
             this.server.startExam();
 
-            Thread input = new Thread(this::threadInput);
-            input.start();
-
-            while (true) {
-                synchronized (this.server) {
-                    this.server.wait();
-                    if (!input.isAlive()) {
-                        break;
-                    }
-                    String studentRequest = this.server.getStudentId();
-                    if (this.server.studentHasFinished(studentRequest)) {
-                        this.server.students.get(studentRequest).examFinished(this.server.studentExam.get(studentRequest).getGrade(), "You finished the exam");
-                    } else {
-                        this.server.students.get(studentRequest).sendQuestion(this.server.studentExam.get(studentRequest).nextQuestion());
+                while (true) {
+                    synchronized (this.server) {
+                        this.server.wait();
+                        String studentRequest = this.server.getStudentId();
+                        if (this.server.studentHasFinished(studentRequest)) {
+                            this.server.students.get(studentRequest).examFinished(this.server.studentExam.get(studentRequest).getGrade(), "You finished the exam");
+                        } else {
+                            this.server.students.get(studentRequest).sendQuestion(this.server.studentExam.get(studentRequest).nextQuestion());
+                        }
                     }
                 }
-            }
 
-            /*
-            do {
-                in = this.scanner.nextLine();
-            } while (!in.equals("c"));
+                /*
+                do {
+                    in = this.scanner.nextLine();
+                } while (!in.equals("c"));
 
-             */
+                 */
 
         } catch (Exception e) {
             System.err.println("Server exception: " + e.toString()); e.printStackTrace();
@@ -79,14 +76,5 @@ public class Server {
             //System.out.println("RMI registry created at port ");
             return registry;
         }
-    }
-
-    private void threadInput() {
-        Scanner scanner = new Scanner(System.in);
-        String in1;
-        do {
-            in1 = scanner.nextLine();
-        } while (!in1.equals("c"));
-        System.out.println("Exam finished");
     }
 }
