@@ -5,6 +5,7 @@ import common.StudentClient;
 import exam.Exam;
 import exam.ExamBuilderCSV;
 import exam.Question;
+import exam.StoreExam;
 
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
@@ -33,6 +34,10 @@ public class ProfessorServerImpl extends UnicastRemoteObject implements Professo
 
     public void uploadExam(String path) throws IOException {
         this.exam = ExamBuilderCSV.build(path);
+    }
+
+    public void storeExam(String path) throws IOException{
+        StoreExam.storeExam(path, this.studentExam);
     }
 
     public void stopRegister() {

@@ -1,6 +1,7 @@
 package server;
 
 import common.StudentClient;
+import exam.StoreExam;
 
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
