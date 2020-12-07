@@ -26,7 +26,8 @@ public class StoreExam {
                 bw.write(line);
             }
 
-            bw.flush(); bw.close(); fw.close();
+            bw.close();
+            fw.close();
 
         } catch (IOException e){
             e.printStackTrace();

@@ -21,6 +21,7 @@ public class ProfessorServerImpl extends UnicastRemoteObject implements Professo
     public HashMap<String, StudentClient> students;
     public HashMap<String, Exam> studentExam;
     public boolean canRegistry;
+    public boolean examInProgress;
     private Integer studentsNumber;
     private String studentRequest;
 
@@ -30,6 +31,7 @@ public class ProfessorServerImpl extends UnicastRemoteObject implements Professo
         this.studentExam = new HashMap<>();
         this.canRegistry = true;
         this.studentsNumber = 0;
+        this.examInProgress = true;
     }
 
     public void uploadExam(String path) throws IOException {
@@ -74,8 +76,10 @@ public class ProfessorServerImpl extends UnicastRemoteObject implements Professo
     @Override
     public void sendAnswer(String studentId, Question question) throws RemoteException {
         synchronized (this) {
-            this.studentExam.get(studentId).answer(question);
-            this.studentRequest = studentId;
+            if (this.examInProgress) {
+                this.studentExam.get(studentId).answer(question);
+                this.studentRequest = studentId;
+            }
             notify();
         }
     }
@@ -89,6 +93,14 @@ public class ProfessorServerImpl extends UnicastRemoteObject implements Professo
     public boolean studentHasFinished(String studentId) {
         synchronized (this) {
             return !this.studentExam.get(studentId).hasNext();
+        }
+    }
+
+    public void examFinished() throws RemoteException {
+        for (HashMap.Entry<String, StudentClient> studentSet  : this.students.entrySet()) {
+            String studentId = studentSet.getKey();
+            StudentClient student = studentSet.getValue();
+            student.examFinished(this.studentExam.get(studentId).getGrade(),"The exam was finish");
         }
     }
 }

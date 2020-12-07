@@ -36,27 +36,29 @@ public class Server {
                 in = scanner.nextLine();
             } while (!in.equals("s"));
 
+            Thread input = new Thread(this::threadInput);
+            input.start();
+
             this.server.stopRegister();
             this.server.startExam();
 
-                while (true) {
-                    synchronized (this.server) {
-                        this.server.wait();
-                        String studentRequest = this.server.getStudentId();
-                        if (this.server.studentHasFinished(studentRequest)) {
-                            this.server.students.get(studentRequest).examFinished(this.server.studentExam.get(studentRequest).getGrade(), "You finished the exam");
-                        } else {
-                            this.server.students.get(studentRequest).sendQuestion(this.server.studentExam.get(studentRequest).nextQuestion());
-                        }
+            while (true) {
+                synchronized (this.server) {
+                    this.server.wait();
+                    if (!input.isAlive()) {
+                        this.server.examInProgress = false;
+                        break;
+                    }
+                    String studentRequest = this.server.getStudentId();
+                    if (this.server.studentHasFinished(studentRequest)) {
+                        this.server.students.get(studentRequest).examFinished(this.server.studentExam.get(studentRequest).getGrade(), "You finished the exam");
+                    } else {
+                        this.server.students.get(studentRequest).sendQuestion(this.server.studentExam.get(studentRequest).nextQuestion());
                     }
                 }
+            }
 
-                /*
-                do {
-                    in = this.scanner.nextLine();
-                } while (!in.equals("c"));
-
-                 */
+            this.server.examFinished();
 
         } catch (Exception e) {
             System.err.println("Server exception: " + e.toString()); e.printStackTrace();
@@ -76,5 +78,14 @@ public class Server {
             //System.out.println("RMI registry created at port ");
             return registry;
         }
+    }
+
+    private void threadInput() {
+        Scanner scanner = new Scanner(System.in);
+        String in;
+        do {
+            in = scanner.nextLine();
+        } while (!in.equals("c"));
+        System.out.println("Exam finished");
     }
 }
