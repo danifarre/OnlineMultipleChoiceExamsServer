@@ -26,10 +26,10 @@ public class ExamThread extends Thread {
                     }
                 }
             }
-            System.out.println("All the students finished the exam");
-            System.out.println("Press (c) to close the exam and save the grades");
+            ServerMessages.allStudentsFinished();
+
         } catch (InterruptedException e) {
-            System.out.println("Exam finished");
+            ServerMessages.examFinished();
         } catch (Exception e) {
             System.err.println("Server exception: " + e.toString());
         }

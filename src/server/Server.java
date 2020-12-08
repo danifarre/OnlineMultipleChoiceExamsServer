@@ -27,12 +27,12 @@ public class Server {
             server = new ProfessorServerImpl();
             registry.bind("exam", server);
 
-            System.out.println("Please, specify the file name of the exam");
+            ServerMessages.serverStart();
             server.uploadExam("exam.csv");
             //server.uploadExam(this.scanner.nextLine());
 
-            System.out.println("The students are registering...");
-            System.out.println("If you want to start the exam, press (s)");
+            ServerMessages.studentsRegister();
+
             do {
                 in = scanner.nextLine();
             } while (!in.equals("s"));
@@ -43,8 +43,8 @@ public class Server {
             ExamThread examThread = new ExamThread(server);
             examThread.start();
 
-            System.out.println("The exam start now");
-            System.out.println("If you want to close the exam, press (c)");
+            ServerMessages.examStart();
+
             do {
                 in = scanner.nextLine();
             } while (!in.equals("c"));
@@ -52,7 +52,7 @@ public class Server {
 
             server.examFinished();
             HashMap<String, Exam> exams = examThread.finishExam();
-            System.out.println("The grades have been saved");
+            ServerMessages.examStop();
 
             StoreExam.storeExam("grades.csv", exams);
 

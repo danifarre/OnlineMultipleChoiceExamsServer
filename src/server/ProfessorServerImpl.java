@@ -49,7 +49,7 @@ public class ProfessorServerImpl extends UnicastRemoteObject implements Professo
 
     public synchronized void nextQuestion(String studentRequest) throws RemoteException {
         try {
-            this.students.get(studentRequest).examFinished(this.studentExam.get(studentRequest).getGrade(), "You finished the exam");
+            this.students.get(studentRequest).examFinished(this.studentExam.get(studentRequest).getGrade(), "You finished the exam.");
         } catch (UnmarshalException ignoder) {}
     }
 
@@ -62,7 +62,7 @@ public class ProfessorServerImpl extends UnicastRemoteObject implements Professo
             String studentId = studentSet.getKey();
             StudentClient student = studentSet.getValue();
             try {
-                student.startExam("The exam starts now");
+                student.startExam("The exam starts now.");
                 student.sendQuestion(this.studentExam.get(studentId).nextQuestion());
                 this.examsInProgress++;
             } catch (ConnectException ignored) {}
@@ -86,7 +86,7 @@ public class ProfessorServerImpl extends UnicastRemoteObject implements Professo
             String studentId = studentSet.getKey();
             StudentClient student = studentSet.getValue();
             try {
-                student.examFinished(this.studentExam.get(studentId).getGrade(),"The exam was finish");
+                student.examFinished(this.studentExam.get(studentId).getGrade(),"The exam was finished.");
             } catch (ConnectException | UnmarshalException ignored) {}
         }
     }
@@ -104,14 +104,11 @@ public class ProfessorServerImpl extends UnicastRemoteObject implements Professo
         if (this.canRegistry) {
             this.students.put(studentId, client);
             this.studentsNumber += 1;
-            System.out.println("Student " + studentId +
-                    " joined, there are " +
-                    this.studentsNumber +
-                    " students in the room");
+            ServerMessages.studentJoined(studentId, this.studentsNumber);
             this.studentExam.put(studentId, this.exam.copy());
         } else {
-            client.registerExpired("The registration time has expired");
-            System.out.println("Student " + studentId + " tried to join");
+            client.registerExpired("The registration time has expired.");
+            ServerMessages.studentTriedToJoin(studentId);
         }
     }
 
