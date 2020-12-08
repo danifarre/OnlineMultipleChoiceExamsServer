@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Scanner;
 
 public class Server {
+    private ServerMessages messages = new ServerMessages();
 
     public static void main(String[] args) {
         new Server().run();
@@ -26,12 +27,14 @@ public class Server {
             server = new ProfessorServerImpl();
             registry.bind("exam", server);
 
-            System.out.println("Please, specify the file name of the exam");
+            messages.serverStart();
+            //System.out.println("Please, specify the file name of the exam");
             server.uploadExam("exam.csv");
             //server.uploadExam(this.scanner.nextLine());
 
-            System.out.println("The students are registering...");
-            System.out.println("If you want to start the exam, press (s)");
+            messages.studentsRegister();
+            //System.out.println("The students are registering...");
+            //System.out.println("If you want to start the exam, press (s)");
             do {
                 in = scanner.nextLine();
             } while (!in.equals("s"));
@@ -42,15 +45,18 @@ public class Server {
             ExamThread examThread = new ExamThread(server);
             examThread.start();
 
-            System.out.println("The exam start now");
-            System.out.println("If you want to close the exam, press (c)");
+            messages.examStart();
+            //System.out.println("The exam start now");
+            //System.out.println("If you want to close the exam, press (c)");
             do {
                 in = scanner.nextLine();
             } while (!in.equals("c"));
 
             server.examFinished();
             HashMap<String, Exam> exams = examThread.finishExam();
-            System.out.println("The grades have been saved");
+
+            messages.examStop();
+            //System.out.println("The grades have been saved");
             examThread.interrupt();
 
             StoreExam.storeExam("grades.csv", exams);

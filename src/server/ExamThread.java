@@ -7,6 +7,7 @@ import java.util.HashMap;
 public class ExamThread extends Thread {
 
     private ProfessorServerImpl server;
+    private ServerMessages messages = new ServerMessages();
 
     public ExamThread(ProfessorServerImpl server) {
         this.server = server;
@@ -26,10 +27,12 @@ public class ExamThread extends Thread {
                     }
                 }
             }
-            System.out.println("All the students finished the exam");
-            System.out.println("Press (c) to close the exam and save the grades");
+            messages.allStudentsFinished();
+            //System.out.println("All the students finished the exam");
+            //System.out.println("Press (c) to close the exam and save the grades");
         } catch (InterruptedException e) {
-            System.out.println("Exam finished");
+            messages.examFinished();
+            //System.out.println("Exam finished");
         } catch (Exception e) {
             System.err.println("Server exception: " + e.toString());
         }
