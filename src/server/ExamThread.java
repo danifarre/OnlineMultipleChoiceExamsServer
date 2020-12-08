@@ -18,8 +18,11 @@ public class ExamThread extends Thread {
             while (!this.server.studentsFinished()) {
                 synchronized (this.server) {
                     this.server.wait();
-                    String studentRequest = server.getStudentId();
-                    if (this.server.studentHasFinished(studentRequest)) {
+                    String studentRequest = this.server.getStudentId();
+                    if (this.server.isStudentReconnecting()) {
+                        this.server.reconectStudent(studentRequest);
+                        this.server.previousQuestion(studentRequest);
+                    }else if (!this.server.studentHasFinished(studentRequest)) {
                         this.server.nextQuestion(studentRequest);
                     } else {
                         this.server.examFinished(studentRequest);

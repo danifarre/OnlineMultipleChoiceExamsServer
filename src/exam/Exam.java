@@ -43,7 +43,8 @@ public class Exam {
     }
 
     public Question previousQuestion() {
-        return this.itQuestion.previous();
+        this.itQuestion.previous();
+        return this.itQuestion.next();
     }
 
     public void answer(Question question) {
@@ -73,5 +74,9 @@ public class Exam {
 
     public Exam copy() {
         return new Exam(this.questions, this.answers, this.studentAnswers, this.grade);
+    }
+
+    public boolean hasPrevious() {
+        return this.itQuestion.hasPrevious();
     }
 }

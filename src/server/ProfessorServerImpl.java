@@ -28,6 +28,7 @@ public class ProfessorServerImpl extends UnicastRemoteObject implements Professo
     private Integer studentsNumber;
     private String studentRequest;
     private Integer examsInProgress;
+    private boolean studentReconnecting;
 
     public ProfessorServerImpl() throws RemoteException {
         super();
@@ -37,6 +38,7 @@ public class ProfessorServerImpl extends UnicastRemoteObject implements Professo
         this.studentsNumber = 0;
         this.examsInProgress = 0;
         this.examInProgress = true;
+        this.studentReconnecting = false;
     }
 
     public void uploadExam(String path) throws IOException {
@@ -47,14 +49,23 @@ public class ProfessorServerImpl extends UnicastRemoteObject implements Professo
         this.canRegistry = false;
     }
 
-    public synchronized void nextQuestion(String studentRequest) throws RemoteException {
+    public synchronized void examFinished(String studentRequest) throws RemoteException {
         try {
             this.students.get(studentRequest).examFinished(this.studentExam.get(studentRequest).getGrade(), "You finished the exam.");
         } catch (UnmarshalException ignored) {}
     }
 
-    public synchronized void examFinished(String studentId) throws RemoteException {
-        this.students.get(studentRequest).sendQuestion(this.studentExam.get(studentRequest).nextQuestion());
+    public synchronized void nextQuestion(String studentId) throws RemoteException {
+        this.students.get(studentId).sendQuestion(this.studentExam.get(studentId).nextQuestion());
+    }
+
+    public void previousQuestion(String studentId) throws RemoteException {
+        if (this.studentExam.get(studentId).hasPrevious()) {
+            this.students.get(studentId).sendQuestion(this.studentExam.get(studentId).previousQuestion());
+        } else {
+            this.students.get(studentId).sendQuestion(this.studentExam.get(studentId).nextQuestion());
+        }
+        this.studentReconnecting = false;
     }
 
     public void startExam() throws RemoteException {
@@ -106,6 +117,11 @@ public class ProfessorServerImpl extends UnicastRemoteObject implements Professo
             this.studentsNumber += 1;
             ServerMessages.studentJoined(studentId, this.studentsNumber);
             this.studentExam.put(studentId, this.exam.copy());
+        } else if (this.students.containsKey(studentId)) {
+            this.students.put(studentId, client);
+            this.studentRequest = studentId;
+            this.studentReconnecting = true;
+            notify();
         } else {
             client.registerExpired("The registration time has expired.");
             ServerMessages.studentTriedToJoin(studentId);
@@ -120,4 +136,13 @@ public class ProfessorServerImpl extends UnicastRemoteObject implements Professo
         }
         notify();
     }
+
+    public synchronized void reconectStudent(String studentRequest) throws RemoteException {
+        this.students.get(studentRequest).reconnectStudent();
+    }
+
+    public synchronized boolean isStudentReconnecting() {
+        return this.studentReconnecting;
+    }
+
 }
