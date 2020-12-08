@@ -36,6 +36,6 @@ public class ExamThread extends Thread {
     }
 
     public HashMap<String, Exam> finishExam() {
-        return this.server.studentExam;
+        return this.server.getStudentsExams();
     }
 }

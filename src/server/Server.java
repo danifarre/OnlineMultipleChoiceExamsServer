@@ -48,11 +48,11 @@ public class Server {
             do {
                 in = scanner.nextLine();
             } while (!in.equals("c"));
+            examThread.interrupt();
 
             server.examFinished();
             HashMap<String, Exam> exams = examThread.finishExam();
             System.out.println("The grades have been saved");
-            examThread.interrupt();
 
             StoreExam.storeExam("grades.csv", exams);
 

@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.rmi.ConnectException;
 import java.rmi.RemoteException;
+import java.rmi.UnmarshalException;
 import java.rmi.server.UnicastRemoteObject;
 import java.sql.Struct;
 import java.util.HashMap;
@@ -20,10 +21,10 @@ import java.util.Set;
 public class ProfessorServerImpl extends UnicastRemoteObject implements ProfessorServer {
 
     private Exam exam;
-    public HashMap<String, StudentClient> students;
-    public HashMap<String, Exam> studentExam;
-    public boolean canRegistry;
-    public boolean examInProgress;
+    private HashMap<String, StudentClient> students;
+    private HashMap<String, Exam> studentExam;
+    private boolean canRegistry;
+    private boolean examInProgress;
     private Integer studentsNumber;
     private String studentRequest;
     private Integer examsInProgress;
@@ -46,11 +47,13 @@ public class ProfessorServerImpl extends UnicastRemoteObject implements Professo
         this.canRegistry = false;
     }
 
-    public void nextQuestion(String studentRequest) throws RemoteException {
-        this.students.get(studentRequest).examFinished(this.studentExam.get(studentRequest).getGrade(), "You finished the exam");
+    public synchronized void nextQuestion(String studentRequest) throws RemoteException {
+        try {
+            this.students.get(studentRequest).examFinished(this.studentExam.get(studentRequest).getGrade(), "You finished the exam");
+        } catch (UnmarshalException ignoder) {}
     }
 
-    public void examFinished(String studentId) throws RemoteException {
+    public synchronized void examFinished(String studentId) throws RemoteException {
         this.students.get(studentRequest).sendQuestion(this.studentExam.get(studentRequest).nextQuestion());
     }
 
@@ -64,6 +67,36 @@ public class ProfessorServerImpl extends UnicastRemoteObject implements Professo
                 this.examsInProgress++;
             } catch (ConnectException ignored) {}
         }
+    }
+
+    public String getStudentId() {
+        return this.studentRequest;
+    }
+
+    public synchronized boolean studentHasFinished(String studentId) {
+        if (!this.studentExam.get(studentId).hasNext()) {
+            this.examsInProgress--;
+            return true;
+        }
+        return false;
+    }
+
+    public void examFinished() throws RemoteException {
+        for (HashMap.Entry<String, StudentClient> studentSet  : this.students.entrySet()) {
+            String studentId = studentSet.getKey();
+            StudentClient student = studentSet.getValue();
+            try {
+                student.examFinished(this.studentExam.get(studentId).getGrade(),"The exam was finish");
+            } catch (ConnectException | UnmarshalException ignored) {}
+        }
+    }
+
+    public boolean studentsFinished() {
+        return this.examsInProgress == 0;
+    }
+
+    public HashMap<String, Exam> getStudentsExams() {
+        return this.studentExam;
     }
 
     @Override
@@ -89,31 +122,5 @@ public class ProfessorServerImpl extends UnicastRemoteObject implements Professo
             this.studentRequest = studentId;
         }
         notify();
-    }
-
-    public String getStudentId() {
-        return this.studentRequest;
-    }
-
-    public synchronized boolean studentHasFinished(String studentId) {
-        if (!this.studentExam.get(studentId).hasNext()) {
-            this.examsInProgress--;
-            return true;
-        }
-        return false;
-    }
-
-    public void examFinished() throws RemoteException {
-        for (HashMap.Entry<String, StudentClient> studentSet  : this.students.entrySet()) {
-            String studentId = studentSet.getKey();
-            StudentClient student = studentSet.getValue();
-            try {
-                student.examFinished(this.studentExam.get(studentId).getGrade(),"The exam was finish");
-            } catch (ConnectException ignored) {}
-        }
-    }
-
-    public boolean studentsFinished() {
-        return this.examsInProgress == 0;
     }
 }
