@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.sql.Struct;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -24,6 +25,7 @@ public class ProfessorServerImpl extends UnicastRemoteObject implements Professo
     public boolean examInProgress;
     private Integer studentsNumber;
     private String studentRequest;
+    private Integer examsInProgress;
 
     public ProfessorServerImpl() throws RemoteException {
         super();
@@ -31,6 +33,7 @@ public class ProfessorServerImpl extends UnicastRemoteObject implements Professo
         this.studentExam = new HashMap<>();
         this.canRegistry = true;
         this.studentsNumber = 0;
+        this.examsInProgress = 0;
         this.examInProgress = true;
     }
 
@@ -38,12 +41,16 @@ public class ProfessorServerImpl extends UnicastRemoteObject implements Professo
         this.exam = ExamBuilderCSV.build(path);
     }
 
-    public void storeExam(String path) throws IOException{
-        StoreExam.storeExam(path, this.studentExam);
-    }
-
     public void stopRegister() {
         this.canRegistry = false;
+    }
+
+    public void nextQuestion(String studentRequest) throws RemoteException {
+        this.students.get(studentRequest).examFinished(this.studentExam.get(studentRequest).getGrade(), "You finished the exam");
+    }
+
+    public void examFinished(String studentId) throws RemoteException {
+        this.students.get(studentRequest).sendQuestion(this.studentExam.get(studentRequest).nextQuestion());
     }
 
     public void startExam() throws RemoteException {
@@ -52,48 +59,45 @@ public class ProfessorServerImpl extends UnicastRemoteObject implements Professo
             StudentClient student = studentSet.getValue();
             student.startExam("The exam starts now");
             student.sendQuestion(this.studentExam.get(studentId).nextQuestion());
+            this.examsInProgress++;
         }
     }
 
     @Override
-    public void registerStudent(StudentClient client, String studentId) throws RemoteException {
-        synchronized (this) {
-            if (this.canRegistry) {
-                this.students.put(studentId, client);
-                this.studentsNumber += 1;
-                System.out.println("Student " + studentId +
-                        " joined, there are " +
-                        this.studentsNumber +
-                        " students in the room");
-                this.studentExam.put(studentId, this.exam.copy());
-            } else {
-                client.registerExpired("The registration time has expired");
-                System.out.println("Student " + studentId + " tried to join");
-            }
+    public synchronized void registerStudent(StudentClient client, String studentId) throws RemoteException {
+        if (this.canRegistry) {
+            this.students.put(studentId, client);
+            this.studentsNumber += 1;
+            System.out.println("Student " + studentId +
+                    " joined, there are " +
+                    this.studentsNumber +
+                    " students in the room");
+            this.studentExam.put(studentId, this.exam.copy());
+        } else {
+            client.registerExpired("The registration time has expired");
+            System.out.println("Student " + studentId + " tried to join");
         }
     }
 
     @Override
-    public void sendAnswer(String studentId, Question question) throws RemoteException {
-        synchronized (this) {
-            if (this.examInProgress) {
-                this.studentExam.get(studentId).answer(question);
-                this.studentRequest = studentId;
-            }
-            notify();
+    public synchronized void sendAnswer(String studentId, Question question) throws RemoteException {
+        if (this.examInProgress) {
+            this.studentExam.get(studentId).answer(question);
+            this.studentRequest = studentId;
         }
+        notify();
     }
 
     public String getStudentId() {
-        synchronized (this) {
-            return this.studentRequest;
-        }
+        return this.studentRequest;
     }
 
-    public boolean studentHasFinished(String studentId) {
-        synchronized (this) {
-            return !this.studentExam.get(studentId).hasNext();
+    public synchronized boolean studentHasFinished(String studentId) {
+        if (!this.studentExam.get(studentId).hasNext()) {
+            this.examsInProgress--;
+            return true;
         }
+        return false;
     }
 
     public void examFinished() throws RemoteException {
@@ -102,5 +106,9 @@ public class ProfessorServerImpl extends UnicastRemoteObject implements Professo
             StudentClient student = studentSet.getValue();
             student.examFinished(this.studentExam.get(studentId).getGrade(),"The exam was finish");
         }
+    }
+
+    public boolean studentsFinished() {
+        return this.examsInProgress == 0;
     }
 }
