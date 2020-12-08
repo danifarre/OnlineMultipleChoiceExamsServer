@@ -9,6 +9,7 @@ import exam.StoreExam;
 
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
+import java.rmi.ConnectException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.sql.Struct;
@@ -57,9 +58,11 @@ public class ProfessorServerImpl extends UnicastRemoteObject implements Professo
         for (HashMap.Entry<String, StudentClient> studentSet  : this.students.entrySet()) {
             String studentId = studentSet.getKey();
             StudentClient student = studentSet.getValue();
-            student.startExam("The exam starts now");
-            student.sendQuestion(this.studentExam.get(studentId).nextQuestion());
-            this.examsInProgress++;
+            try {
+                student.startExam("The exam starts now");
+                student.sendQuestion(this.studentExam.get(studentId).nextQuestion());
+                this.examsInProgress++;
+            } catch (ConnectException ignored) {}
         }
     }
 
@@ -104,7 +107,9 @@ public class ProfessorServerImpl extends UnicastRemoteObject implements Professo
         for (HashMap.Entry<String, StudentClient> studentSet  : this.students.entrySet()) {
             String studentId = studentSet.getKey();
             StudentClient student = studentSet.getValue();
-            student.examFinished(this.studentExam.get(studentId).getGrade(),"The exam was finish");
+            try {
+                student.examFinished(this.studentExam.get(studentId).getGrade(),"The exam was finish");
+            } catch (ConnectException ignored) {}
         }
     }
 

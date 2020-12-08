@@ -21,6 +21,7 @@ public class Server {
         ProfessorServerImpl server;
         String in;
         scanner = new Scanner(System.in);
+
         try {
             Registry registry = startRegistry(null);
             server = new ProfessorServerImpl();
