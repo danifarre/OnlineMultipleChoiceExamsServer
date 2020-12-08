@@ -28,8 +28,7 @@ public class Server {
             registry.bind("exam", server);
 
             ServerMessages.serverStart();
-            server.uploadExam("exam.csv");
-            //server.uploadExam(this.scanner.nextLine());
+            server.uploadExam(scanner.nextLine());
 
             ServerMessages.studentsRegister();
 
@@ -68,9 +67,7 @@ public class Server {
             registry.list();
             return registry;
         } catch (RemoteException ex) {
-            //System.out.println("RMI registry cannot be located ");
             Registry registry = LocateRegistry.createRegistry(port);
-            //System.out.println("RMI registry created at port ");
             return registry;
         }
     }
