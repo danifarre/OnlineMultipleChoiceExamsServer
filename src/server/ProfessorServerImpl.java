@@ -50,7 +50,7 @@ public class ProfessorServerImpl extends UnicastRemoteObject implements Professo
     public synchronized void nextQuestion(String studentRequest) throws RemoteException {
         try {
             this.students.get(studentRequest).examFinished(this.studentExam.get(studentRequest).getGrade(), "You finished the exam.");
-        } catch (UnmarshalException ignoder) {}
+        } catch (UnmarshalException ignored) {}
     }
 
     public synchronized void examFinished(String studentId) throws RemoteException {
