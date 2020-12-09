@@ -6,7 +6,7 @@ import java.util.HashMap;
 
 public class ExamThread extends Thread {
 
-    private ProfessorServerImpl server;
+    private final ProfessorServerImpl server;
 
     public ExamThread(ProfessorServerImpl server) {
         this.server = server;
@@ -22,7 +22,7 @@ public class ExamThread extends Thread {
                     if (this.server.isStudentReconnecting()) {
                         this.server.reconectStudent(studentRequest);
                         this.server.previousQuestion(studentRequest);
-                    }else if (!this.server.studentHasFinished(studentRequest)) {
+                    } else if (!this.server.studentHasFinished(studentRequest)) {
                         this.server.nextQuestion(studentRequest);
                     } else {
                         this.server.examFinished(studentRequest);

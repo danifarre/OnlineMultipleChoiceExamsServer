@@ -12,23 +12,17 @@ import java.util.Scanner;
 public class Server {
 
     public static void main(String[] args) {
-        new Server().run();
-        System.exit(0);
-    }
-
-    private void run() {
-        Scanner scanner;
-        ProfessorServerImpl server;
+        Scanner scanner = new Scanner(System.in);
         String in;
-        scanner = new Scanner(System.in);
 
         try {
             Registry registry = startRegistry(null);
-            server = new ProfessorServerImpl();
-            registry.bind("exam", server);
+            ProfessorServerImpl server = new ProfessorServerImpl();
 
             ServerMessages.serverStart();
             server.uploadExam(scanner.nextLine());
+
+            registry.bind("exam", server);
 
             ServerMessages.studentsRegister();
 
@@ -58,9 +52,11 @@ public class Server {
         } catch (Exception e) {
             System.err.println("Server exception: " + e.toString()); e.printStackTrace();
         }
+        System.exit(0);
     }
 
-    private Registry startRegistry(Integer port) throws RemoteException {
+
+    private static Registry startRegistry(Integer port) throws RemoteException {
         if (port == null) port = 1099;
         try {
             Registry registry = LocateRegistry.getRegistry(port);
