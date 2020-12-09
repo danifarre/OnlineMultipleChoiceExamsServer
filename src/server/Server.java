@@ -1,7 +1,6 @@
 package server;
 
 import exam.Exam;
-import exam.ExamBuilderCSV;
 import exam.StoreExam;
 
 import java.rmi.RemoteException;
@@ -17,11 +16,12 @@ public class Server {
         String in;
 
         try {
-            ServerMessages.serverStart();
-            ExamBuilderCSV.build(scanner.nextLine());
-
             Registry registry = startRegistry(null);
             ProfessorServerImpl server = new ProfessorServerImpl();
+
+            ServerMessages.serverStart();
+            server.uploadExam(scanner.nextLine());
+
             registry.bind("exam", server);
 
             ServerMessages.studentsRegister();
