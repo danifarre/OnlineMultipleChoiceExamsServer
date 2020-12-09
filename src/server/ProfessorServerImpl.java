@@ -117,7 +117,7 @@ public class ProfessorServerImpl extends UnicastRemoteObject implements Professo
             this.studentsNumber += 1;
             ServerMessages.studentJoined(studentId, this.studentsNumber);
             this.studentExam.put(studentId, this.exam.copy());
-        } else if (this.students.containsKey(studentId)) {
+        } else if (this.students.containsKey(studentId) && this.studentExam.get(studentId).hasNext()) {
             this.students.put(studentId, client);
             this.studentRequest = studentId;
             this.studentReconnecting = true;
