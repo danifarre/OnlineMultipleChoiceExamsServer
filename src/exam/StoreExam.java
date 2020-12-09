@@ -10,7 +10,7 @@ import java.util.Map;
 
 public class StoreExam {
 
-    public static void storeExam(String path, HashMap<String, Exam> studentExam) {
+    public static void store(String path, HashMap<String, Exam> studentExam) {
 
         FileWriter fw;
 

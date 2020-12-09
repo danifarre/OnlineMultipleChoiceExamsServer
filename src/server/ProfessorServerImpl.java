@@ -41,10 +41,6 @@ public class ProfessorServerImpl extends UnicastRemoteObject implements Professo
         this.studentReconnecting = false;
     }
 
-    public void uploadExam(String path) throws IOException {
-        this.exam = ExamBuilderCSV.build(path);
-    }
-
     public void stopRegister() {
         this.canRegistry = false;
     }
@@ -137,7 +133,7 @@ public class ProfessorServerImpl extends UnicastRemoteObject implements Professo
         notify();
     }
 
-    public synchronized void reconectStudent(String studentRequest) throws RemoteException {
+    public synchronized void reconnectStudent(String studentRequest) throws RemoteException {
         this.students.get(studentRequest).reconnectStudent();
     }
 

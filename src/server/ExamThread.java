@@ -20,7 +20,7 @@ public class ExamThread extends Thread {
                     this.server.wait();
                     String studentRequest = this.server.getStudentId();
                     if (this.server.isStudentReconnecting()) {
-                        this.server.reconectStudent(studentRequest);
+                        this.server.reconnectStudent(studentRequest);
                         this.server.previousQuestion(studentRequest);
                     } else if (!this.server.studentHasFinished(studentRequest)) {
                         this.server.nextQuestion(studentRequest);
