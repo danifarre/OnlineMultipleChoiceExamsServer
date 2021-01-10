@@ -70,13 +70,14 @@ public class ProfessorServerImpl extends UnicastRemoteObject implements Professo
 
         Unirest.setTimeouts(0, 0);
         HttpResponse<String> response = Unirest.post("http://localhost:8000/api/exam/upload/")
-                .field("description", "exam creation test 3")
+                .field("description", "exam")
                 .field("time", "18:56:03")
                 .field("date", "2021-01-07")
                 .field("location", "Lleida")
-                .field("file", new File("exam.csv"))
+                .field("exam_file", new File("exam.csv"))
                 .asString();
 
+        System.out.println(response.getBody());
         this.exam = ExamBuilderCSV.build(path);
     }
 
