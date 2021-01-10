@@ -3,20 +3,25 @@ package server;
 import exam.Exam;
 import exam.StoreExam;
 
+import java.awt.*;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.HashMap;
 import java.util.Scanner;
 
+import java.net.*;
+import java.io.*;
+
 public class Server {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         new Server().run();
         System.exit(0);
     }
 
-    private void run() {
+    private void run() throws IOException {
+
         Scanner scanner;
         ProfessorServerImpl server;
         String in;
@@ -28,7 +33,10 @@ public class Server {
             registry.bind("exam", server);
 
             ServerMessages.serverStart();
-            server.uploadExam(scanner.nextLine());
+            String examPath = scanner.nextLine();
+            server.uploadExam(examPath);
+
+
 
             ServerMessages.studentsRegister();
 

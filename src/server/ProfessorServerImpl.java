@@ -1,22 +1,23 @@
 package server;
 
+import com.mashape.unirest.http.HttpResponse;
+import com.mashape.unirest.http.Unirest;
+import com.mashape.unirest.http.exceptions.UnirestException;
 import common.ProfessorServer;
 import common.StudentClient;
 import exam.Exam;
 import exam.ExamBuilderCSV;
 import exam.Question;
-import exam.StoreExam;
 
-import java.io.IOException;
-import java.nio.file.FileAlreadyExistsException;
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.rmi.ConnectException;
 import java.rmi.RemoteException;
 import java.rmi.UnmarshalException;
 import java.rmi.server.UnicastRemoteObject;
-import java.sql.Struct;
 import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+
 
 public class ProfessorServerImpl extends UnicastRemoteObject implements ProfessorServer {
 
@@ -41,7 +42,41 @@ public class ProfessorServerImpl extends UnicastRemoteObject implements Professo
         this.studentReconnecting = false;
     }
 
-    public void uploadExam(String path) throws IOException {
+    public void uploadExam(String path) throws IOException, UnirestException {
+        /*
+        URL url = new URL ("http://127.0.0.1:8000/api/exam/upload/");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setDoOutput(true);
+        conn.setRequestMethod("POST");
+        conn.setRequestProperty("Content-Type", "application/json");
+        String input = "{\"description\":\"exam\","+
+                        "\"time\":\"18:52:05\"," +
+                        "\"date\":\"2021-02-12\"," +
+                        "\"location\":\"eps_server\"," +
+                        "\"exam_file\":\"/exam.csv\"}";
+        OutputStream os = conn.getOutputStream();
+        os.write(input.getBytes());
+        os.flush();
+        System.out.println(input);
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+        String output;
+        while((output = br.readLine()) != null)
+        {
+            System.out.println("\nClient POST. Resposta: " + output );
+        }
+        conn.disconnect();
+        */
+
+        Unirest.setTimeouts(0, 0);
+        HttpResponse<String> response = Unirest.post("http://localhost:8000/api/exam/upload/")
+                .field("description", "exam creation test 3")
+                .field("time", "18:56:03")
+                .field("date", "2021-01-07")
+                .field("location", "Lleida")
+                .field("file", new File("exam.csv"))
+                .asString();
+
         this.exam = ExamBuilderCSV.build(path);
     }
 
@@ -111,21 +146,35 @@ public class ProfessorServerImpl extends UnicastRemoteObject implements Professo
     }
 
     @Override
-    public synchronized void registerStudent(StudentClient client, String studentId) throws RemoteException {
-        if (this.canRegistry) {
-            this.students.put(studentId, client);
-            this.studentsNumber += 1;
-            ServerMessages.studentJoined(studentId, this.studentsNumber);
-            this.studentExam.put(studentId, this.exam.copy());
-        } else if (this.students.containsKey(studentId)) {
-            this.students.put(studentId, client);
-            this.studentRequest = studentId;
-            this.studentReconnecting = true;
-            notify();
+    public synchronized void registerStudent(StudentClient client, String studentId) throws IOException {
+        URL url = new URL ("http://127.0.0.1:8000/api/user/validate/" + studentId);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+        String validation = br.readLine();
+        conn.disconnect();
+
+        if (validation.equals("true")) {
+            if (this.canRegistry) {
+                this.students.put(studentId, client);
+                this.studentsNumber += 1;
+                ServerMessages.studentJoined(studentId, this.studentsNumber);
+                this.studentExam.put(studentId, this.exam.copy());
+            } else if (this.students.containsKey(studentId)) {
+                this.students.put(studentId, client);
+                this.studentRequest = studentId;
+                this.studentReconnecting = true;
+                notify();
+            } else {
+                client.registerExpired("The registration time has expired.");
+                ServerMessages.studentTriedToJoin(studentId);
+            }
         } else {
-            client.registerExpired("The registration time has expired.");
-            ServerMessages.studentTriedToJoin(studentId);
+            System.out.println("Student with id: " + studentId + " tried to join the exam");
+            client.registerExpired("You are not registered");
         }
+
     }
 
     @Override
