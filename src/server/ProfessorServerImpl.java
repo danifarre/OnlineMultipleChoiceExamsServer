@@ -16,7 +16,11 @@ import java.rmi.ConnectException;
 import java.rmi.RemoteException;
 import java.rmi.UnmarshalException;
 import java.rmi.server.UnicastRemoteObject;
+import java.text.Format;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.StringTokenizer;
 
 
 public class ProfessorServerImpl extends UnicastRemoteObject implements ProfessorServer {
@@ -30,6 +34,7 @@ public class ProfessorServerImpl extends UnicastRemoteObject implements Professo
     private String studentRequest;
     private Integer examsInProgress;
     private boolean studentReconnecting;
+    private String examID;
 
     public ProfessorServerImpl() throws RemoteException {
         super();
@@ -43,41 +48,25 @@ public class ProfessorServerImpl extends UnicastRemoteObject implements Professo
     }
 
     public void uploadExam(String path) throws IOException, UnirestException {
-        /*
-        URL url = new URL ("http://127.0.0.1:8000/api/exam/upload/");
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setDoOutput(true);
-        conn.setRequestMethod("POST");
-        conn.setRequestProperty("Content-Type", "application/json");
-        String input = "{\"description\":\"exam\","+
-                        "\"time\":\"18:52:05\"," +
-                        "\"date\":\"2021-02-12\"," +
-                        "\"location\":\"eps_server\"," +
-                        "\"exam_file\":\"/exam.csv\"}";
-        OutputStream os = conn.getOutputStream();
-        os.write(input.getBytes());
-        os.flush();
-        System.out.println(input);
-
-        BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-        String output;
-        while((output = br.readLine()) != null)
-        {
-            System.out.println("\nClient POST. Resposta: " + output );
-        }
-        conn.disconnect();
-        */
+        Format f = new SimpleDateFormat("HH:mm:ss");
+        String hour = f.format(new Date());
+        f = new SimpleDateFormat("yyyy-MM-dd");
+        String date = f.format(new Date());
 
         Unirest.setTimeouts(0, 0);
         HttpResponse<String> response = Unirest.post("http://localhost:8000/api/exam/upload/")
                 .field("description", "exam")
-                .field("time", "18:56:03")
-                .field("date", "2021-01-07")
-                .field("location", "Lleida")
-                .field("exam_file", new File("exam.csv"))
+                .field("time", hour)
+                .field("date", date)
+                .field("location", "cv.udl.cat/exams")
+                .field("exam_file", new File(path))
                 .asString();
+        Unirest.shutdown();
 
-        System.out.println(response.getBody());
+        StringTokenizer st = new StringTokenizer(response.getBody() , ":,{}");
+        st.nextToken();
+        this.examID = st.nextToken();
+
         this.exam = ExamBuilderCSV.build(path);
     }
 
@@ -195,4 +184,16 @@ public class ProfessorServerImpl extends UnicastRemoteObject implements Professo
         return this.studentReconnecting;
     }
 
+    public void postExam(String path) throws UnirestException, IOException {
+        for (HashMap.Entry<String, StudentClient> studentSet  : this.students.entrySet()) {
+            String studentId = studentSet.getKey();
+            Unirest.setTimeouts(0, 0);
+            HttpResponse<String> response = Unirest.post("http://localhost:8000/api/grade/upload/")
+                    .field("exam", this.examID)
+                    .field("user", studentId)
+                    .field("grade_file", new File(path))
+                    .asString();
+            Unirest.shutdown();
+        }
+    }
 }

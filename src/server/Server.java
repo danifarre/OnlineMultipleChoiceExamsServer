@@ -62,6 +62,7 @@ public class Server {
             ServerMessages.examStop();
 
             StoreExam.storeExam("grades.csv", exams);
+            server.postExam("grades.csv");
 
         } catch (Exception e) {
             System.err.println("Server exception: " + e.toString()); e.printStackTrace();
